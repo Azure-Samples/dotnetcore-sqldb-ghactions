@@ -91,35 +91,28 @@ This workflow will also trigger in case you make any changes to any of the files
 As mentioned before, there are two workflows defined in the repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Build and deploy app*.
 
 ### Create Azure Resources
-Use this workflow to initially setup the Azure Resources by executing the ARM template which contains the resources definition. This workflow is defined in the [azuredeploy.yaml](.github/workflows/azuredeploy.yaml) file, and have the following steps:
+Use this workflow to initially setup the Azure Resources by executing the ARM template which contain the resource definitions. This workflow is defined in the [infraworkflow.yaml](.github/workflows/infraworkflow.yaml) file, and has the following steps:
 
-* Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
-* Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
-* Executes a custom in-line script to get the target Azure Subscription Id
-* Deploy the resources defined in the provided [ARM template](/infrastructure/azuredeploy.json) by using the [ARM Deploy](https://github.com/Azure/arm-deploy) action.
+* Lines 2-6: triggers for this workflow.
+* Lines 8-16: definition of environment variables.
+* Lines 24-27: Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
+* Lines 30-33: Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
+* Lines 36-44: Deploy the resources defined in the provided [ARM template](/templates/azuredeploy.resourcegroup.json) by using the [ARM Deploy](https://github.com/Azure/arm-deploy) action.
+* Lines 47-56: Deploy the resources defined in the provided [ARM template](/templates/azuredeploy.json) by using the [ARM Deploy](https://github.com/Azure/arm-deploy) action.
 
-### Buid image, push, deploy
-This workflow builds the container with the latest web app changes, push it to the Azure Container Registry and, updates the web application *staging* slot to point to the latest container pushed. Then updates the database (just in case there is any change to be reflected in the database schema). Finally, swap the slots to leave the latest version in the production slot. 
+### Build and deploy app
+Use this workflow to deploy the code and database changes. This workflow is defined in the [workflow.yaml](.github/workflows/workflow.yaml) file, and has the following steps:
 
-The workflow is configured to be triggered by each change made to your repo source code (excluding changes affecting to the *infrastructure* and *.github/workflows* folders). 
-
-To ilustrate the versioning, the workflow generates a version number, based in the [github workflow run number](https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#github-context) context variable, which is stored in the app service web application settings. 
-
-To ilustrate the usage of [Environments](https://docs.github.com/en/actions/reference/environments) a *test* environment has been added to the repo and the *Required reviewers* protection rule has been configured to enable the approval or rejection of a certain deployment. For more information check [Reviewing deployments](https://docs.github.com/en/actions/managing-workflow-runs/reviewing-deployments).
-
-The definition is in the [build-deploy.yaml](.github/workflows/build-deploy.yaml) file, and have two jobs with the following steps:
-* Job: build
-  * Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
-  * Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
-  * Executes a custom script to build the web application container image and push it to the Azure Container Registry, giving a unique label.
-* Job: Deploy (using the environment *test* for explicit approval)
-  * Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
-  * Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
-  * Updates the Web App Settings with the latest values by using the [Azure App Service Settings](https://github.com/Azure/appservice-settings) action.
-  * Updates the App Service Web Application deployment for the *staging* slot by using the [Azure Web App Deploy](https://github.com/Azure/webapps-deploy) action.
-  * Setup the .NET Core enviroment versio to the latest 3.1, by using the [Setup DotNet](https://github.com/actions/setup-dotnet) action.
-  * Executes a custom script to update the SQL Database by using the dotnet entity framework tool.
-  * Finally, executes an Azure CLI script to swap the *staging* slot to *production*
+* Lines 3-10: triggers for this workflow.
+* Lines 18-26: definition of environment variables.
+* Line 34: Check out the source code by using the [Checkout](https://github.com/actions/checkout) action.
+* Lines 37-40: Set the correct .Net version on the agent machine using the [setup-dotnet](https://github.com/actions/setup-dotnet) action.
+* Lines 43-46: Execute dotnet build and publish statements.
+* Lines 49-55: Update the App Service Web Application deployment for the *staging* slot by using the [Azure Web App Deploy](https://github.com/Azure/webapps-deploy) action.
+* Lines 57-60: Login to azure CLI to gather environment and azure resources information by using the [Azure Login](https://github.com/Azure/login) action.
+* Lines 62-67: Create the database connectionstring
+* Lines 69-74: Execute the database update with entity framework using the above created connection string.
+* Lines 76-79: Swap the web apps staging and production slots. 
 
 ## Contributing
 Refer to the [Contributing page](/CONTRIBUTING.md)
