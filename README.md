@@ -20,92 +20,76 @@ The sample source code is based on the tutorial for building [ASP.NET Core and A
 ## Setup an end-to-end CI/CD workflow
 
 This repo contains two different GitHub workflows:
-* [Create Azure Resources](.github/workflows/infraworkflow.yml): To create the Azure Resources required for the sample by using an ARM template. This workflow will create the following resources:
+* [infraworkflow.yml](.github/workflows/infraworkflow.yml): To create the Azure Resources required for the sample by using an ARM template. This workflow will create the following resources:
+    - Resource Group
     - App Service Plan
     - Web App (with one staging slot)
     - Azure SQL Server and the Azure SQL Database for the sample.
-    - Storage Account.
-* [Build image, push & deploy](.github/workflows/build-deploy.yaml): this workflow will build the sample app using a container, push the container to the Azure Container Registry, deploy the container to the Web App staging slot, update the database and, finally, swap the slots.
+* [workflow.yml](.github/workflows/workflow.yaml): this workflow will build the sample app and publish it to a folder on the build agent and deploy this build code to the Web App staging slot. Next it will update the database and, finally, swap the slots.
 
-To start, you can directly fork this repo and follow the instructions to properly setup the workflows.
+To start, you can directly fork this repo and follow the instructions below to properly setup the workflows.
 
-### Pre-requisites
-The [Create Azure Resources](.github/workflows/azuredeploy.yaml) workflow, describes in the `azuredeploy.yaml` file the pre-requisites needed to setup the CI/CD.
+## Create Azure Resources (Infraworkflow.yml) setup
+### 1. Setup environment variables
+The [infraworkflow.yml](.github/workflows/infraworkflow.yaml) file for creating your azure resources, holds a couple of default values for the name of the resource group, as well as the name for the web app and SQL database. If you want to use other naming, you can change these values on lines 10 to 14. 
 
-### 1. Create the Azure Resource group
-Open the Azure Cloud Shell at https://shell.azure.com. You can alternately use the Azure CLI if you've installed it locally. (For more information on Cloud Shell, see the [Cloud Shell Overview](https://docs.microsoft.com/en-us/azure/cloud-shell/overview))   
+### 2. Setup your subscription ID
 
-```
-az group create --name {resource-group-name} --location {resource-group-location}
-```
-Replace the `{resource-group-name}` and the `{resource-group-location}` for one of your preferences. By default, the resource group name used in the .yaml workflows is `rg-todo-sample`, be sure to replace it if you change the name.
+Additionaly this workflow uses a secret value for your Azure subscription ID. In your forked GitHub repository, go to Settings - Secrets and create a new secret called AZURE_SUBSCRIPTION_ID. Give it your subscription ID as a value. 
 
-Sample:
-```
-az group create --name rg-todo-sample --location westeurope
-```
-### 2. Create a Service Principal to manage your resource group from GitHub Actions
-We will use a service principal from the GitHub workflow to create and manage the azure resources.
+To find your current subscription ID, in an Azure cloud shell execute the following statements: 
 
 ```
-az ad sp create-for-rbac --name "{service-principal-name}" --sdk-auth --role contributor --scopes /subscriptions/{subscription-id}/resourceGroups/{resource-group-name}
+az account list -o table
 ```
 
-The `{service-principal-name}` is the name you want to provide. You can find `{subscription-id}` in the Azure Portal where you have created the resource group. Finally, the `{resource-group-name}` is the name provided in the previous command.
+### 3. Create Azure credentials
 
-Sample:
-```
-az ad sp create-for-rbac --name "sp-todo-app" --sdk-auth --role contributor --scopes /subscriptions/00000000-0000-aaaa-bbbb-00000000/resourceGroups/rg-todo-sample
-```
+You will also need to create a service principal and paste its details in another secret called AZURE_CREDENTIALS. This is called a deployment credential. The process for doing this is described [here](https://github.com/Azure/login#configure-deployment-credentials). This deployment credential is used on line 27 in the infraworkflow.yml file.
 
-Save the command output, it will be used to setup the required `AZURE_CREDENTIALS` secret in the following step.
-```
-{
-  "clientId": "<guid>",
-  "clientSecret": "<secret>",
-  "subscriptionId": "00000000-0000-aaaa-bbbb-00000000",
-  "tenantId": ""00000000-0000-cccc-dddd-00000000"",
-  "activeDirectoryEndpointUrl": "https://login.microsoftonline.com",
-  "resourceManagerEndpointUrl": "https://management.azure.com/",
-  "activeDirectoryGraphResourceId": "https://graph.windows.net/",
-  "sqlManagementEndpointUrl": "https://management.core.windows.net:8443/",
-  "galleryEndpointUrl": "https://gallery.azure.com/",
-  "managementEndpointUrl": "https://management.core.windows.net/"
-}
+### 4. Create database username and password secrets
 
-```
-For further details, check https://github.com/Azure/login#configure-deployment-credentials
-
-### 3. Configure the required repo secrets 
-Add the following secrets to your repo:
-- AZURE_CREDENTIALS: the content is the output of the previous executed command.
-- SQL_SERVER_ADMIN_PASSWORD: this will be the password used to setup and access the Azure SQL database.
-
-There are other additional secrets that you will need to add after the environment has been created in the next step.
+Last, you will need 2 additional secrets for your SQL database username and password. Create 2 additional secrets for this called SQLADMIN_LOGIN and SQLADMIN_PASS. Make sure you choose a complex password, otherwise the create step for the SQL database server will fail. If it does, changing the secret value to a more complex one and re-running the workflow should fix this issue.
 
 For further deatils, check https://docs.github.com/en/free-pro-team@latest/actions/reference/encrypted-secrets#creating-encrypted-secrets-for-a-repository
 
-Finally, review both workflows and ensure the defined variables have the correct values and matches the pre-requisites you have just setup.
+Finally, review the workflow and ensure the defined variables have the correct values and matches the pre-requisites you have just setup.
 
-
-
-### 4. Execute the Create Resources workflow
+### 5. Execute the Create Resources workflow
  Go to your repo [Actions](../../actions) tab, under *All workflows* you will see the [Create Azure Resources](../../actions?query=workflow%3A"Create+Azure+Resources") workflow. 
 
 Launch the workflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
 
 This will create all the required resources in the Azure Subscription and Resource Group you configured.
 
-Now add the following secrets to your repo (those will be used by the build_deploy workflow):
-- ACR_USERNAME: you can pick it from the Azure Container Registry settings, in the *Access Keys*.
-- ACR_PASSWORD: use one of the passwords from the Azure Container Registry settings, in the *Access Keys*.
-- SQL_CONNECTION_STRING: pick it from the SQL DB connection string settings. It has the following format: *Server=tcp:<SQL_SERVER_NAME>.database.windows.net,1433;Initial Catalog=sqldb-todo;Persist Security Info=False;User ID=<SQL_SERVER_ADMIN_LOGIN>;Password=<SQL_SERVER_ADMIN_PASSWORD>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;*
+This workflow will also trigger in case you make any changes to the [infraworkflow.yml](./.github/workflows/infraworkflow.yml) file or to any of the templates in the [templates](./templates/) folder/.
 
-## Test your CI/CD workflow
-To launch the CI/CD workflow (Build image, push & deploy), you just need to make a change in the app code. You will see a new GitHub action initiated in the [Actions](../../actions) tab.
+## Build and deploy app (Workflow.yml) setup
+Now that the Azure resources got created, you can deploy the application to it. 
+
+### 1. Setup environment variables
+In case you changed any of the values of the environment variables in the infraworkflow.yml file, make sure you also change these values in the workflow.yml file to the same values.
+
+### 2. Setup secrets
+This workflow uses 1 additional secret as opposed to the infraworkflow.yml file and that is the web apps' publish profile. To get at this file, execute the following steps: 
+- In the Azure portal navigate to the web app that got created by executing the infraworkflow.yml file. 
+- On the overview page of the web app click on 'download publish profile'. 
+- Copy paste the entire content of this publish profile to a new secret in your GitHub repo called AZURE_WEBAPP_PUBLISH_PROFILE. 
+
+This secret is used in line 53 of the workflow.yml file. 
+
+### 3. Execute the 'Build and deploy app' workflow
+Go to your repo [Actions](../../actions) tab, under *All workflows* you will see the [Build and deploy app](../../actions?query=workflow%3A"Build+and+deploy+app") workflow. 
+
+Launch the workflow by using the *[workflow_dispatch](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/)* event trigger.
+
+This will deploy all the code and database changes on the Azure resources.
+
+This workflow will also trigger in case you make any changes to any of the files in this repository.
 
 ## Workflows YAML explained
-As mentioned before, there are two workflows defined in the repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Buid image, push, deploy*.
+As mentioned before, there are two workflows defined in the repo [Actions](../../actions) tab: the *Create Azure Resources* and the *Build and deploy app*.
+
 ### Create Azure Resources
 Use this workflow to initially setup the Azure Resources by executing the ARM template which contains the resources definition. This workflow is defined in the [azuredeploy.yaml](.github/workflows/azuredeploy.yaml) file, and have the following steps:
 

@@ -1,4 +1,4 @@
-name: workflow to deploy an ARM Template to a Subscription Scope
+name: Create Azure Resources
 on: 
     push:
         paths: 

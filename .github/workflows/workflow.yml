@@ -1,4 +1,4 @@
-name: Deploy ASP.NET Core app to Azure Web App
+name: Build and deploy app
 
 on:
   push:
