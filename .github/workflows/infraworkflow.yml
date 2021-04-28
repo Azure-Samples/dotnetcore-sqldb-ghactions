@@ -40,8 +40,8 @@ jobs:
           scope: subscription
           subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           region: centralus # Set this to your target region
-          template: repo/ARM/azuredeploy.resourcegroup.json  # Set this to the location of your template file
-          parameters: repo/ARM/azuredeploy.resourcegroup.parameters.json rgName=${{env.AZURE_RESOURCEGROUP_NAME}} #override rgName in parameters file
+          template: repo/templates/azuredeploy.resourcegroup.json  # Set this to the location of your template file
+          parameters: repo/templates/azuredeploy.resourcegroup.parameters.json rgName=${{env.AZURE_RESOURCEGROUP_NAME}} #override rgName in parameters file
 
       # Deployment of template    
       - name: Deploy ARM Template resources
@@ -52,7 +52,7 @@ jobs:
           subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
           resourceGroupName: ${{env.AZURE_RESOURCEGROUP_NAME}}
           region: centralus # Set this to your target region
-          template: repo/ARM/azuredeploy.json  # Set this to the location of your template file
-          parameters: repo/ARM/azuredeploy.parameters.json webappName=${{env.AZURE_WEBAPP_NAME}} aspName=${{env.ASP_NAME}} sqlServerName=${{env.SQLSERVER_NAME}} databaseName=${{env.DATABASE_NAME}} sqlAdminLogin=${{env.SQLADMIN_LOGIN}} sqlAdminPass=${{env.SQLADMIN_PASS}} # Set this to the location of your parameters file
+          template: repo/templates/azuredeploy.json  # Set this to the location of your template file
+          parameters: repo/templates/azuredeploy.parameters.json webappName=${{env.AZURE_WEBAPP_NAME}} aspName=${{env.ASP_NAME}} sqlServerName=${{env.SQLSERVER_NAME}} databaseName=${{env.DATABASE_NAME}} sqlAdminLogin=${{env.SQLADMIN_LOGIN}} sqlAdminPass=${{env.SQLADMIN_PASS}} # Set this to the location of your parameters file
  
 #TODO: Once the infrastructure got created, download web app publish profile of the staging slot and add it as a secret to the repo. It will be used by the workflow.yml file. 
