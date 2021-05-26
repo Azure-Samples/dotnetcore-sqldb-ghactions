@@ -1,13 +1,8 @@
 name: Build and deploy app
 
 on:
-  push:
-    branches:
-      - master
-      - workflows
-  pull_request:
-    branches:
-      - '*'
+  push
+
 # CONFIGURATION
 # For help, go to https://github.com/Azure/Actions
 #
@@ -16,7 +11,7 @@ on:
 #
 # 2. Change these variables for your configuration:
 env:
-  AZURE_WEBAPP_NAME: demo-webappsql-gh-actions    # set this to your application's name
+  AZURE_WEBAPP_NAME: demo-webappsql-gh-actions-unique    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '3.1'           # set this to the dot net version to use
   AZURE_RESOURCEGROUP_NAME: demo-webappsql-gh-actions # set this to your preferred resource group name
