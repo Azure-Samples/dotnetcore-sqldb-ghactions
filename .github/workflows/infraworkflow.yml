@@ -8,7 +8,7 @@ on:
 env:
     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}    # set this to your Azure Subscription Id
     AZURE_RESOURCEGROUP_NAME: demo-webappsql-gh-actions                      # set this to your preferred resource group name
-    AZURE_WEBAPP_NAME: demo-webappsql-gh-actions                          # set this to your preferred web app name
+    AZURE_WEBAPP_NAME: demo-webappsql-gh-actions-unique                          # set this to your preferred web app name
     ASP_NAME: demo-webappsql-gh-actions
     SQLSERVER_NAME: demo-webappsql-gh-actions-srv                          # set this to your preferred sql server name
     DATABASE_NAME: demo-webappsql-gh-actions-db                   # set this to your preferred sql database name
@@ -22,6 +22,9 @@ jobs:
       steps:
                   
       # Please refer to https://github.com/Azure/login#configure-deployment-credentials for help on the Azure login action and setting up your secrets 
+      # This template also deploys the resourcegroup and not only the resources within the resource group. For this to work, your service principal needs access on the subscription level. You can create the service principal through: 
+      # az ad sp create-for-rbac --name "spname" --sdk-auth --role contributor --scopes /subscriptions/<subscription-id>
+      # In case you don't want a service principal with such wide permissions, you can ommit the automated deployment of the resource group in lines 39-48 of this file. 
       - name: Azure Login
         uses: azure/login@v1
         with:
