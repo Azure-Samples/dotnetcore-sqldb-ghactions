@@ -45,7 +45,17 @@ az account list -o table
 
 ### 3. Create Azure credentials
 
-You will also need to create a service principal and paste its details in another secret called AZURE_CREDENTIALS. This is called a deployment credential. The process for doing this is described [here](https://github.com/Azure/login#configure-deployment-credentials). This deployment credential is used on line 27 in the infraworkflow.yml file.
+You will also need to create a service principal and paste its details in another secret called AZURE_CREDENTIALS. This is called a deployment credential. The process for doing this is described [here](https://github.com/Azure/login#configure-deployment-credentials). 
+
+Since the infraworkflow also deploys the resourcegroup, you will need a wider credential, which is allowed to perform action on the subscription level. For this you can create the service principal as such: 
+
+```
+az ad sp create-for-rbac --name "spname" --sdk-auth --role contributor --scopes /subscriptions/<subscription-id>
+```
+
+In case you don't want the service principal to have such wide permissions, you can create a regular resource group service principal with contributor rights as explained [here](https://github.com/Azure/login#configure-deployment-credentials) and create your resource group through the portal or through CLI statements. You will then also need to delete lines 39-48 in the infraworkflow.yml file. 
+
+The deployment credential is used on line 27 in the infraworkflow.yml file.
 
 ### 4. Create database username and password secrets
 
