@@ -1,13 +1,8 @@
 name: Build and deploy app
 
 on:
-  push:
-    branches:
-      - master
-      - workflows
-  pull_request:
-    branches:
-      - '*'
+  push
+
 # CONFIGURATION
 # For help, go to https://github.com/Azure/Actions
 #
