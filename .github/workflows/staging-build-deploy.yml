@@ -1,11 +1,10 @@
 name: staging - build and deploy
 on:
   workflow_dispatch:
-  push:
-    # Pattern matched against refs/tags
-    tags:        
-      - '*'  
-  #push:
+  # push:
+  #   # Pattern matched against refs/tags
+  #   tags:        
+  #     - '*'  
 env:
   AZURE_WEBAPP_NAME: demo-ais    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
@@ -19,14 +18,15 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
+    environment: staging
     steps:
       # Checkout the repo
-      - uses: actions/checkout@master  
-        ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run    
+      - uses: actions/checkout@master   
+        ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run            
       - name: Login for az cli commands 
         uses: azure/login@v1
         with:
-          creds: '{"clientId":"${{ env.CLIENT_ID }}","clientSecret":"${{ env.CLIENT_SECRET }}","subscriptionId":"${{ env.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'       
+          creds: '{"clientId":"${{ env.CLIENT_ID }}","clientSecret":"${{ env.CLIENT_SECRET }}","subscriptionId":"${{ env.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}' 
       # Setup .NET Core SDK
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
@@ -39,7 +39,15 @@ jobs:
           $JSON.ConnectionStrings.MyDbConnection = $ENV:DB_CONN_STRING
           $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
           dotnet build --configuration Release
-          dotnet publish -c Release -o myapp           
+          dotnet publish -c Release -o myapp     
+          Write-Output ""====================>Tag is $env:GITHUB_REF_NAME<===================="      
+      - name: Create deployment
+        uses: chrnorm/deployment-action@releases/v1
+        id: deployment
+        with:
+          initial_status: in_progress
+          token: ${{ secrets.GIT_PAT }}   
+          environment: ${{ env.SLOT_NAME }}             
       # Deploy to Azure Web apps staging slot
       - name: 'Run Azure webapp deploy action using publish profile credentials'
         uses: azure/webapps-deploy@v2
@@ -48,10 +56,25 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
           package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
           slot-name: ${{ env.SLOT_NAME }}
-      - name: Update Database
-        run: |
-          dotnet tool install --global dotnet-ef --version 3.1.1
-          dotnet ef database update
-        env:
-          ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STRING }}                    
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ secrets.GIT_PAT }}   
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ secrets.GIT_PAT }}   
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+                      
+      # - name: Update Database
+      #   run: |
+      #     dotnet tool install --global dotnet-ef --version 3.1.1
+      #     dotnet ef database update
+      #   env:
+      #     ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STRING }}          
 # For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
