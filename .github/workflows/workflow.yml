@@ -38,7 +38,7 @@ jobs:
       # Run dotnet build and publish
       - name: dotnet build and publish
         run: |
-          $JSON = (Get-Content ./appsettings.json | ConvertFrom-Json)
+          $JSON = Get-Content ./appsettings.json | ConvertFrom-Json
           $JSON.ConnectionStrings.MyDbConnection = $ENV:DB_CONN_STRING
           $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
           dotnet build --configuration Release
