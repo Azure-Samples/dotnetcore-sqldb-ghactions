@@ -1,4 +1,4 @@
-name: UAT - build and deploy
+name: uat - build and deploy
 on:
   workflow_dispatch:
   #push:
