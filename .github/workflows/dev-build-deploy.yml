@@ -15,6 +15,7 @@ env:
 jobs:
   build-and-deploy:
     runs-on: windows-latest
+    environment: dev
     steps:
       # Checkout the repo
       - uses: actions/checkout@master     
@@ -34,7 +35,14 @@ jobs:
           $JSON.ConnectionStrings.MyDbConnection = $ENV:DB_CONN_STRING
           $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
           dotnet build --configuration Release
-          dotnet publish -c Release -o myapp           
+          dotnet publish -c Release -o myapp  
+      - name: Create deployment
+        uses: chrnorm/deployment-action@releases/v1
+        id: deployment
+        with:
+          initial_status: in_progress
+          token: ${{ secrets.GIT_PAT }}   
+          environment: ${{ env.SLOT_NAME }}                   
       # Deploy to Azure Web apps staging slot
       - name: 'Run Azure webapp deploy action using publish profile credentials'
         uses: azure/webapps-deploy@v2
@@ -43,6 +51,21 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
           package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
           slot-name: ${{ env.SLOT_NAME }}
+      - name: Update deployment status (success)
+        if: success()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ secrets.GIT_PAT }}   
+          state: "success"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+      - name: Update deployment status (failure)
+        if: failure()
+        uses: chrnorm/deployment-status@releases/v1
+        with:
+          token: ${{ secrets.GIT_PAT }}   
+          state: "failure"
+          deployment_id: ${{ steps.deployment.outputs.deployment_id }}
+                                
       # - name: Update Database
       #   run: |
       #     dotnet tool install --global dotnet-ef --version 3.1.1
