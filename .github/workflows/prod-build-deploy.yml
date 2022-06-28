@@ -1,6 +1,10 @@
 name: prod - build and deploy
 on:
   workflow_dispatch:
+  push:
+    # Pattern matched against refs/tags
+    tags:        
+      - '*'    
   #push:
 env:
   AZURE_WEBAPP_NAME: demo-ais    # set this to your application's name
@@ -17,7 +21,8 @@ jobs:
     runs-on: windows-latest
     steps:
       # Checkout the repo
-      - uses: actions/checkout@master   
+      - uses: actions/checkout@master  
+        ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run       
       - name: Login for az cli commands 
         uses: azure/login@v1
         with:

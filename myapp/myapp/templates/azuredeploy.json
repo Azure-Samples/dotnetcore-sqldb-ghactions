@@ -1,0 +1,229 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webappName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of your web app"
+            }
+        },
+        "aspName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of your app service plan"
+            }
+        },
+        "aspSKU": {
+            "type": "string",
+            "metadata": {
+                "description": "description"
+            },
+            "defaultValue": "S1"
+        },
+        "sqlServerName": {
+        "type": "string"
+        },
+        "sqlAdminLogin": {
+        "type": "string"
+        },
+        "sqlAdminPass": {
+        "type": "securestring"
+        },
+        "databaseName": {
+        "type": "string"
+        },
+        "dbCollation": {
+        "type": "string",
+        "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+        },
+        "dbSkuName": {
+        "type": "string",
+        "defaultValue": "GP_S_Gen5_2",
+        "allowedValues": [
+            "GP_Gen4_1",
+            "GP_Gen4_2",
+            "GP_Gen4_3",
+            "GP_Gen4_4",
+            "GP_Gen4_5",
+            "GP_Gen4_6",
+            "GP_Gen4_7",
+            "GP_Gen4_8",
+            "GP_Gen4_9",
+            "GP_Gen4_10",
+            "GP_Gen4_16",
+            "GP_Gen4_24",
+            "GP_Gen5_2",
+            "GP_Gen5_4",
+            "GP_Gen5_6",
+            "GP_Gen5_8",
+            "GP_Gen5_10",
+            "GP_Gen5_12",
+            "GP_Gen5_14",
+            "GP_Gen5_16",
+            "GP_Gen5_18",
+            "GP_Gen5_20",
+            "GP_Gen5_24",
+            "GP_Gen5_32",
+            "GP_Gen5_40",
+            "GP_Gen5_80",
+            "GP_S_Gen5_1",
+            "GP_S_Gen5_2",
+            "GP_S_Gen5_4"
+        ],
+        "metadata": {
+            "description": "Azure SQL Database SKU Name"
+        }
+        },
+        "dbSkuSizeGB": {
+        "type": "int",
+        "minValue": 1,
+        "maxValue": 1024,
+        "defaultValue": 16,
+        "metadata": {
+            "description": "Azure SQL Database Storage Max Size in GB"
+        }
+        },
+        "skuName": {
+        "type": "string",
+        "defaultValue": "S1",
+        "allowedValues": [
+            "F1",
+            "B1",
+            "B2",
+            "B3",
+            "S1",
+            "S2",
+            "S3",
+            "P1v2",
+            "P2v2",
+            "P3v2",
+            "P1v3",
+            "P2v3",
+            "P3v3"
+        ],
+        "metadata": {
+            "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+        }
+        },
+        "skuCapacity": {
+        "type": "int",
+        "defaultValue": 1,
+        "minValue": 1,
+        "metadata": {
+            "description": "Describes plan's instance count"
+        }
+        }
+    },
+    "functions": [],
+    "variables": {
+        "sqlDatabaseServerlessTiers": [
+            "GP_S_Gen5_1",
+            "GP_S_Gen5_2",
+            "GP_S_Gen5_4"
+    ]
+    },
+    "resources": [
+        {
+            "name": "[parameters('webappName')]",
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2018-11-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "[concat('hidden-related:', resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', parameters('aspName'))]": "Resource",
+                "displayName": "[parameters('webappName')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]"
+            ],
+            "properties": {
+                "name": "[parameters('webappName')]",
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]"
+            }
+        },
+        {
+            "name": "[parameters('aspName')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2018-02-01",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "[parameters('aspSKU')]",
+                "capacity": 1
+            },
+            "tags": {
+                "displayName": "[parameters('aspName')]"
+            },
+            "properties": {
+                "name": "[parameters('aspName')]"
+            }
+        },
+        {
+            "apiVersion": "2020-06-01",
+            "type": "Microsoft.Web/sites/slots",
+            "name": "[concat(parameters('webappName'), '/', 'staging')]",
+            "kind": "app",
+            "location": "[resourceGroup().location]",
+            "comments": "This specifies the web app slots.",
+            "tags": {
+                "displayName": "WebAppSlots"
+            },
+            "properties": {
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('aspName'))]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/Sites', parameters('webappName'))]"
+            ]
+        },
+        {
+            "name": "[parameters('sqlServerName')]",
+            "type": "Microsoft.Sql/servers",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2019-06-01-preview",
+            "tags": {
+            "app": "[parameters('webAppName')]"
+            },
+            "properties": {
+            "administratorLogin": "[parameters('sqlAdminLogin')]",
+            "administratorLoginPassword": "[parameters('sqlAdminPass')]",
+            "publicNetworkAccess": "Enabled"
+            },
+            "resources": [
+            {
+                "name": "[parameters('databaseName')]",
+                "type": "databases",
+                "location": "[resourceGroup().location]",
+                "tags": {
+                "app": "[parameters('webAppName')]"
+                },
+                "apiVersion": "2017-10-01-preview",
+                "dependsOn": [
+                "[concat('Microsoft.Sql/servers/', parameters('sqlserverName'))]"
+                ],
+                "sku": {
+                "name": "[parameters('dbSkuName')]",
+                "tier": "GeneralPurpose"
+                },
+                "kind": "[concat('v12.0,user,vcore',if(contains(variables('sqlDatabaseServerlessTiers'),parameters('dbSkuName')),',serverless',''))]",
+                "properties": {
+                "collation": "[parameters('dbCollation')]",
+                "maxSizeBytes": "[mul(mul(mul(parameters('dbSkuSizeGB'),1024),1024),1024)]"
+                }
+            },
+            {
+                "name": "AllowAllWindowsAzureIps",
+                "type": "firewallrules",
+                "location": "[resourceGroup().location]",
+                "apiVersion": "2014-04-01-preview",
+                "dependsOn": [
+                "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]"
+                ],
+                "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "0.0.0.0"
+                }
+            }
+            ]
+        }
+    ],
+    "outputs": {}
+}
