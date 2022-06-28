@@ -1,10 +1,10 @@
 name: prod - build and deploy
 on:
   workflow_dispatch:
-  # push:
-  #   # Pattern matched against refs/tags
-  #   tags:        
-  #     - '*'  
+  push:
+    # Pattern matched against refs/tags
+    tags:        
+      - '*'  
 env:
   AZURE_WEBAPP_NAME: demo-ais    # set this to your application's name
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
