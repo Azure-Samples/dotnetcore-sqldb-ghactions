@@ -2,7 +2,7 @@ name: Build and deploy app
 
 on:
   workflow_dispatch:
-
+  push:
 # CONFIGURATION
 # For help, go to https://github.com/Azure/Actions
 #
@@ -49,28 +49,28 @@ jobs:
           package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
           slot-name: staging
 
-      - name: Login for az cli commands 
-        uses: azure/login@v1
-        with:
-          creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
+      # - name: Login for az cli commands 
+      #   uses: azure/login@v1
+      #   with:
+      #     creds: '{"clientId":"${{ secrets.CLIENT_ID }}","clientSecret":"${{ secrets.CLIENT_SECRET }}","subscriptionId":"${{ secrets.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}'
 
-      - name: create db connection string
-        run: |
-          CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ env.SQLSERVER_NAME }} --name ${{ env.DATABASE_NAME }} -o tsv)
-          CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.SQLADMIN_LOGIN }}/g")
-          CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.SQLADMIN_PASS }}/g")
-          echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
+      # - name: create db connection string
+      #   run: |
+      #     CONN_STR=$(az sql db show-connection-string --client ado.net --server ${{ env.SQLSERVER_NAME }} --name ${{ env.DATABASE_NAME }} -o tsv)
+      #     CONN_STR=$(echo $CONN_STR | sed "s/<username>/${{ env.SQLADMIN_LOGIN }}/g")
+      #     CONN_STR=$(echo $CONN_STR | sed "s/<password>/${{ env.SQLADMIN_PASS }}/g")
+      #     echo "SQL_DB_CONN_STR=$CONN_STR" >> $GITHUB_ENV
 
-      - name: Update Database
-        run: |
-          dotnet tool install --global dotnet-ef --version 3.1.1
-          dotnet ef database update
-        env:
-          ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
+      # - name: Update Database
+      #   run: |
+      #     dotnet tool install --global dotnet-ef --version 3.1.1
+      #     dotnet ef database update
+      #   env:
+      #     ConnectionStrings__MyDbConnection: ${{ env.SQL_DB_CONN_STR }}
       
-      - name: Swap to production slot
-        run: |
-          az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCEGROUP_NAME }} --name ${{ env.AZURE_WEBAPP_NAME }} --slot staging --target-slot production
-          echo "Swap finished. App Service Application URL: https://$(az webapp show --resource-group ${{ env.AZURE_RESOURCEGROUP_NAME }} --name ${{ env.AZURE_WEBAPP_NAME }} --query hostNames[0] -o tsv)"
+      # - name: Swap to production slot
+      #   run: |
+      #     az webapp deployment slot swap --resource-group ${{ env.AZURE_RESOURCEGROUP_NAME }} --name ${{ env.AZURE_WEBAPP_NAME }} --slot staging --target-slot production
+      #     echo "Swap finished. App Service Application URL: https://$(az webapp show --resource-group ${{ env.AZURE_RESOURCEGROUP_NAME }} --name ${{ env.AZURE_WEBAPP_NAME }} --query hostNames[0] -o tsv)"
 
 # For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
