@@ -18,7 +18,8 @@ env:
   SQLSERVER_NAME: demo-ais
   DATABASE_NAME: demo-ais
   SQLADMIN_LOGIN: ${{ secrets.SQLADMIN_LOGIN  }}                # Create a secret in your Github repo for the SQL Admin login name you want to use
-  SQLADMIN_PASS: ${{ secrets.SQLADMIN_PASS  }}                 # Create a secret in your Github repo for the SQL Admin password you want to use
+  SQLADMIN_PASS: ${{ secrets.SQLADMIN_PASS  }}  
+  DB_CONN_STRING: ${{ secrets.STAGING_CONN_STRING  }}                 # Create a secret in your Github repo for the SQL Admin password you want to use
   
 jobs:
   build-and-deploy:
@@ -37,6 +38,9 @@ jobs:
       # Run dotnet build and publish
       - name: dotnet build and publish
         run: |
+          $JSON = (Get-Content ./appsettings.json | ConvertFrom-Json)
+          $JSON.ConnectionStrings.MyDbConnection = $ENV:DB_CONN_STRING
+          $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
           dotnet build --configuration Release
           dotnet publish -c Release -o myapp 
           
