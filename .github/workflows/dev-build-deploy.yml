@@ -8,13 +8,20 @@ env:
   DOTNET_VERSION: '3.1'           # set this to the dot net version to use
   DB_CONN_STRING: ${{ secrets.DEV_CONN_STRING  }} # Create a secret in your Github repo for the SQL Admin password you want to use
   AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.DEV_AZURE_WEBAPP_PUBLISH_PROFILE  }}
+  CLIENT_ID: ${{ secrets.CLIENT_ID }}
+  CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+  SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
   SLOT_NAME: 'dev'
 jobs:
   build-and-deploy:
     runs-on: windows-latest
     steps:
       # Checkout the repo
-      - uses: actions/checkout@master      
+      - uses: actions/checkout@master     
+      - name: Login for az cli commands 
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ env.CLIENT_ID }}","clientSecret":"${{ env.CLIENT_SECRET }}","subscriptionId":"${{ env.SUBSCRIPTION_ID }}","tenantId":"${{ secrets.TENANT_ID }}"}' 
       # Setup .NET Core SDK
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
