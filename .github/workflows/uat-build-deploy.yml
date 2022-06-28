@@ -41,7 +41,7 @@ jobs:
           $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
           dotnet build --configuration Release
           dotnet publish -c Release -o myapp     
-          Write-Output ""====================>Tag is $env:GITHUB_REF_NAME<===================="      
+          Write-Output "====================>Tag is $env:GITHUB_REF_NAME<===================="      
       - name: Create deployment
         uses: chrnorm/deployment-action@releases/v1
         id: deployment
