@@ -1,0 +1,39 @@
+name: dev - build and deploy
+on:
+  workflow_dispatch:
+  push:
+env:
+  AZURE_WEBAPP_NAME: demo-ais    # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '3.1'           # set this to the dot net version to use
+  DB_CONN_STRING: ${{ secrets.DEV_CONN_STRING  }} # Create a secret in your Github repo for the SQL Admin password you want to use
+  AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.DEV_AZURE_WEBAPP_PUBLISH_PROFILE  }}
+  SLOT_NAME: 'dev'
+jobs:
+  build-and-deploy:
+    runs-on: windows-latest
+    steps:
+      # Checkout the repo
+      - uses: actions/checkout@master      
+      # Setup .NET Core SDK
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }} 
+      # Run dotnet build and publish
+      - name: dotnet build and publish
+        run: |
+          $JSON = Get-Content ./appsettings.json | ConvertFrom-Json
+          $JSON.ConnectionStrings.MyDbConnection = $ENV:DB_CONN_STRING
+          $JSON | ConvertTo-Json | out-file ./appsettings.json -FORCE
+          dotnet build --configuration Release
+          dotnet publish -c Release -o myapp           
+      # Deploy to Azure Web apps staging slot
+      - name: 'Run Azure webapp deploy action using publish profile credentials'
+        uses: azure/webapps-deploy@v2
+        with: 
+          app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
+          package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
+          slot-name: ${{ env.SLOT_NAME }}
+# For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
