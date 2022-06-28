@@ -43,4 +43,10 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
           package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
           slot-name: ${{ env.SLOT_NAME }}
+      - name: Update Database
+        run: |
+          dotnet tool install --global dotnet-ef --version 3.1.1
+          dotnet ef database update
+        env:
+          ConnectionStrings__MyDbConnection: ${{ env.DB_CONN_STRING }}                    
 # For more samples to get started with GitHub Action workflows to deploy to Azure, refer to https://github.com/Azure/actions-workflow-samples
