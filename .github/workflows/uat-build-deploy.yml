@@ -22,7 +22,8 @@ jobs:
     steps:
       # Checkout the repo
       - uses: actions/checkout@master   
-        ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run            
+        with:
+          ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run            
       - name: Login for az cli commands 
         uses: azure/login@v1
         with:
