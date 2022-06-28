@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-latest
     steps:
       # Checkout the repo
-      - uses: actions/checkout@master      
+      - uses: actions/checkout@v3    
         ref: ${{ env.GITHUB_REF_NAME }} #the tag that triggered this run
       - name: Login for az cli commands 
         uses: azure/login@v1
