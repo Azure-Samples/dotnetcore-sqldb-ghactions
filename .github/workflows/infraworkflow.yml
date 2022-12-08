@@ -1,5 +1,6 @@
 name: Create Azure Resources
 on: 
+    workflow_disptch:
     push:
         paths: 
         - 'ARM/**'
@@ -7,11 +8,11 @@ on:
 
 env:
     AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID  }}    # set this to your Azure Subscription Id
-    AZURE_RESOURCEGROUP_NAME: demo-webappsql-gh-actions                      # set this to your preferred resource group name
-    AZURE_WEBAPP_NAME: demo-webappsql-gh-actions-unique                          # set this to your preferred web app name
-    ASP_NAME: demo-webappsql-gh-actions
-    SQLSERVER_NAME: demo-webappsql-gh-actions-srv                          # set this to your preferred sql server name
-    DATABASE_NAME: demo-webappsql-gh-actions-db                   # set this to your preferred sql database name
+    AZURE_RESOURCEGROUP_NAME: ContosoSample3-RG                      # set this to your preferred resource group name
+    AZURE_WEBAPP_NAME: cicd-newwebappnakul                          # set this to your preferred web app name
+    ASP_NAME: cicd-newaspnakul
+    SQLSERVER_NAME: cicd-newsqlserverpnakul                          # set this to your preferred sql server name
+    DATABASE_NAME: cicd-newsqlserverdbpnakul                   # set this to your preferred sql database name
     SQLADMIN_LOGIN: ${{ secrets.SQLADMIN_LOGIN  }}                # Create a secret in your Github repo for the SQL Admin login name you want to use
     SQLADMIN_PASS: ${{ secrets.SQLADMIN_PASS  }}                 # Create a secret in your Github repo for the SQL Admin password you want to use
 
