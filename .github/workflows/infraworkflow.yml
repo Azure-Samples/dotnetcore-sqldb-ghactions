@@ -26,7 +26,7 @@ jobs:
       # az ad sp create-for-rbac --name "spname" --sdk-auth --role contributor --scopes /subscriptions/<subscription-id>
       # This example uses federated identity (OIDC) for authentication
       - name: Azure Login with Federated Identity
-        uses: azure/login@v1
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -34,13 +34,13 @@ jobs:
       
       # Checkout
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
         with:
           path: repo
           
       # Deployment of template    
       - name: Deploy ARM Template resourcegroup
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         with:
           # You can change these environment variables for your configuration:   AZURE_SUBSCRIPTION_ID
           scope: subscription
@@ -51,7 +51,7 @@ jobs:
 
       # Deployment of template    
       - name: Deploy ARM Template resources
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@65ae74fb7aec7c680c88ef456811f353adae4d06 # v1.0.9
         with:
           # You can change these environment variables for your configuration:   AZURE_SUBSCRIPTION_ID
           scope: resourcegroup
