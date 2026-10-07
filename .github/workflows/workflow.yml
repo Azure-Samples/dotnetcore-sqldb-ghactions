@@ -26,11 +26,11 @@ jobs:
     steps:
 
       # Checkout the repo
-      - uses: actions/checkout@master
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       
       # Setup .NET Core SDK
       - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@871f041373faaad213a635d9afb62905ec029bbb # v1.10.1
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }} 
       
@@ -42,7 +42,7 @@ jobs:
           
       # Deploy to Azure Web apps staging slot
       - name: 'Run Azure webapp deploy action using publish profile credentials'
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@5cfb776471c748b351e1ebf5770e208a54ace016 # v2.2.19
         with: 
           app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE  }} # Define secret variable in repository settings as per action documentation
@@ -50,7 +50,7 @@ jobs:
           slot-name: staging
 
       - name: Login for az cli commands 
-        uses: azure/login@v1
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
